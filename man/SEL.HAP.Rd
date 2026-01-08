@@ -53,12 +53,22 @@ n_mark <- 50
 
 ## Construct a simple GEN matrix:
 ## first two columns: chromosome and position
-## remaining columns: alleles "A","C","G","T"
+## each individual is represented by two allele columns (A1/A2)
 chr <- rep(1, n_mark)
 pos <- seq_len(n_mark) * 100
 alleles <- c("A", "C", "G", "T")
-geno <- matrix(sample(alleles, n_mark * n_ind, replace = TRUE),
-               nrow = n_mark, ncol = n_ind)
+
+geno <- matrix(NA_character_, nrow = n_mark, ncol = 2 * n_ind)
+for (m in seq_len(n_mark)) {
+  a <- sample(alleles, 2, replace = FALSE)   # biallelic per marker
+  geno[m, ] <- sample(a, 2 * n_ind, replace = TRUE)
+}
+
+colnames(geno) <- as.vector(rbind(
+  paste0("id", seq_len(n_ind), "_A1"),
+  paste0("id", seq_len(n_ind), "_A2")
+))
+
 GEN <- cbind(chr, pos, geno)
 
 ## Phenotype + intercept as fixed effect

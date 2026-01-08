@@ -321,12 +321,22 @@ test.HAP <- function(HAP.X, YFIX, KIN, PAR) {
 #'
 #' ## Construct a simple GEN matrix:
 #' ## first two columns: chromosome and position
-#' ## remaining columns: alleles "A","C","G","T"
+#' ## each individual is represented by two allele columns (A1/A2)
 #' chr <- rep(1, n_mark)
 #' pos <- seq_len(n_mark) * 100
 #' alleles <- c("A", "C", "G", "T")
-#' geno <- matrix(sample(alleles, n_mark * n_ind, replace = TRUE),
-#'                nrow = n_mark, ncol = n_ind)
+#'
+#' geno <- matrix(NA_character_, nrow = n_mark, ncol = 2 * n_ind)
+#' for (m in seq_len(n_mark)) {
+#'   a <- sample(alleles, 2, replace = FALSE)   # biallelic per marker
+#'   geno[m, ] <- sample(a, 2 * n_ind, replace = TRUE)
+#' }
+#'
+#' colnames(geno) <- as.vector(rbind(
+#'   paste0("id", seq_len(n_ind), "_A1"),
+#'   paste0("id", seq_len(n_ind), "_A2")
+#' ))
+#'
 #' GEN <- cbind(chr, pos, geno)
 #'
 #' ## Phenotype + intercept as fixed effect
@@ -356,7 +366,7 @@ SEL.HAP <- function(GEN, YFIX, KIN, nHap, p.threshold, PAR) {
   Pos.Chr <- list()
   for (i in chr) {
     Pos.Chr[[i]] <- which(MAP[, 1] == i)
-    PoS[[i]] <- Pos.Chr[[i]][-length(Pos.Chr[[i]])]
+    PoS[[i]] <- Pos.Chr[[i]][1:(length(Pos.Chr[[i]])-nHap+1)]
   }
 
   Extension <- function(POS, POS.CHR, GEN, YFIX, KIN, p.threshold, PAR) {
